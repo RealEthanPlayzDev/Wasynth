@@ -44,12 +44,16 @@ impl DeadCodeElimination {
 		let mut remaining = Vec::with_capacity(list.len());
 
 		for op in list {
-			if self.is_reachable() {
+			let reachable = if self.is_reachable() {
 				self.maybe_end_of_block(&op);
-
-				remaining.push(op);
+				true
 			} else {
 				self.drop_unreachable(&op);
+				self.is_reachable()
+			};
+
+			if reachable {
+				remaining.push(op);
 			}
 		}
 
