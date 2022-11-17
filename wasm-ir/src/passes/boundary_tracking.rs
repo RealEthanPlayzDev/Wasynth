@@ -30,7 +30,7 @@ impl BoundaryTracking {
 				Operator::Else => {
 					let data = BoundaryType::Else;
 
-					self.pending_stack.push(Some(data));
+					*self.pending_stack.last_mut().unwrap() = Some(data);
 				}
 				Operator::End { .. } => {
 					let boundary = self.pending_stack.pop().unwrap();
