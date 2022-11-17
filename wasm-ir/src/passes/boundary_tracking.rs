@@ -46,6 +46,7 @@ impl BoundaryTracking {
 
 	pub fn run(&mut self, code: &[Operator]) -> HashMap<usize, BoundaryType> {
 		self.pending_stack.clear();
+		self.pending_stack.push(None);
 
 		self.run_tracking(code);
 
