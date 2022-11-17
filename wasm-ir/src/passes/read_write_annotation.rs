@@ -42,7 +42,7 @@ impl ReadWriteLabel {
 
 #[derive(Default)]
 pub struct ReadWriteAnnotation {
-	branch_stack: Vec<Option<usize>>,
+	branch_stack: Vec<bool>,
 	pending_stack: Vec<ReadWriteLabel>,
 
 	result_map: HashMap<usize, ReadWriteLabel>,
@@ -60,25 +60,23 @@ impl ReadWriteAnnotation {
 	fn handle_if(&mut self, key: usize) {
 		let mut popped = self.pending_stack.pop().unwrap();
 
-		self.result_map.insert(key + 1, popped.clone());
+		if self.branch_stack.pop().unwrap() {
+			let other = self.pending_stack.pop().unwrap();
 
-		if let Some(other) = self.branch_stack.pop().unwrap() {
-			popped.branch_merge(&self.result_map[&other]);
+			popped.branch_merge(&other);
 		}
 
 		self.result_map.insert(key, popped);
 	}
 
-	fn handle_else(&mut self, key: usize) {
-		let popped = self.pending_stack.pop().unwrap();
+	fn handle_else(&mut self) {
+		self.pending_stack.push(ReadWriteLabel::default());
 
-		*self.branch_stack.last_mut().unwrap() = Some(key);
-
-		self.result_map.insert(key + 1, popped);
+		*self.branch_stack.last_mut().unwrap() = true;
 	}
 
 	fn handle_end(&mut self) {
-		self.branch_stack.push(None);
+		self.branch_stack.push(false);
 		self.pending_stack.push(ReadWriteLabel::default());
 	}
 
@@ -86,7 +84,7 @@ impl ReadWriteAnnotation {
 		match inst {
 			Operator::Block { .. } | Operator::Loop { .. } => self.handle_block(key),
 			Operator::If { .. } => self.handle_if(key),
-			Operator::Else => self.handle_else(key),
+			Operator::Else => self.handle_else(),
 			Operator::End => self.handle_end(),
 			_ => return false,
 		}
