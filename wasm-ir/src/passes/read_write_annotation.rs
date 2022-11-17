@@ -1,21 +1,21 @@
-use std::collections::{BTreeMap, BTreeSet};
+use std::collections::{HashMap, HashSet};
 
 use wasmparser::Operator;
 
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 pub enum Var {
 	Local(u32),
 	Global(u32),
 }
 
-#[derive(Default, Clone)]
+#[derive(Debug, Default, Clone)]
 pub struct ReadWriteLabel {
-	read_set: BTreeSet<Var>,
-	write_set: BTreeSet<Var>,
+	read_set: HashSet<Var>,
+	write_set: HashSet<Var>,
 }
 
 impl ReadWriteLabel {
-	pub fn read_set(&self) -> &BTreeSet<Var> {
+	pub fn read_set(&self) -> &HashSet<Var> {
 		&self.read_set
 	}
 
@@ -24,7 +24,7 @@ impl ReadWriteLabel {
 		self.write_set.clear();
 	}
 
-	pub fn read_extend(&mut self, other: &BTreeSet<Var>) {
+	pub fn read_extend(&mut self, other: &HashSet<Var>) {
 		self.read_set.extend(other);
 	}
 
@@ -45,7 +45,7 @@ pub struct ReadWriteAnnotation {
 	branch_stack: Vec<Option<usize>>,
 	pending_stack: Vec<ReadWriteLabel>,
 
-	result_map: BTreeMap<usize, ReadWriteLabel>,
+	result_map: HashMap<usize, ReadWriteLabel>,
 	label_scratch: ReadWriteLabel,
 }
 
@@ -142,7 +142,7 @@ impl ReadWriteAnnotation {
 		self.result_map.insert(usize::MAX, last);
 	}
 
-	pub fn run(&mut self, code: &[Operator]) -> BTreeMap<usize, ReadWriteLabel> {
+	pub fn run(&mut self, code: &[Operator]) -> HashMap<usize, ReadWriteLabel> {
 		self.branch_stack.clear();
 		self.pending_stack.clear();
 		self.label_scratch.clear();
