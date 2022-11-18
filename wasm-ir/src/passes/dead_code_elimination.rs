@@ -40,29 +40,15 @@ impl DeadCodeElimination {
 		self.nested_unreachable == 0
 	}
 
-	fn run_tracking<'a>(&mut self, list: Vec<Operator<'a>>) -> Vec<Operator<'a>> {
-		let mut remaining = Vec::with_capacity(list.len());
-
-		for op in list {
-			let reachable = if self.is_reachable() {
-				self.maybe_end_of_block(&op);
+	pub fn run(&mut self, list: &mut Vec<Operator>) {
+		list.retain(|op| {
+			if self.is_reachable() {
+				self.maybe_end_of_block(op);
 				true
 			} else {
-				self.drop_unreachable(&op);
+				self.drop_unreachable(op);
 				self.is_reachable()
-			};
-
-			if reachable {
-				remaining.push(op);
 			}
-		}
-
-		remaining
-	}
-
-	pub fn run(list: Vec<Operator>) -> Vec<Operator> {
-		let mut handler = Self::default();
-
-		handler.run_tracking(list)
+		});
 	}
 }
